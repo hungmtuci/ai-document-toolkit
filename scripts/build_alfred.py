@@ -56,18 +56,25 @@ if [ -z "$FILES" ]; then
     exit 0
 fi
 
+OUTPUT=""
 while IFS= read -r file; do
     if [ -n "$file" ]; then
         if [ "$ACTION" == "pdf" ]; then
-            "$PYTHON_BIN" "$TOOLKIT_DIR/scripts/convert_to_pdf.py" "$file"
+            RES=$("$PYTHON_BIN" "$TOOLKIT_DIR/scripts/convert_to_pdf.py" "$file" 2>&1)
         elif [ "$ACTION" == "md" ]; then
-            "$PYTHON_BIN" "$TOOLKIT_DIR/scripts/convert_to_markdown.py" "$file"
+            RES=$("$PYTHON_BIN" "$TOOLKIT_DIR/scripts/convert_to_markdown.py" "$file" 2>&1)
         elif [ "$ACTION" == "ai" ]; then
-            "$PYTHON_BIN" "$TOOLKIT_DIR/scripts/convert_for_ai.py" "$file"
+            RES=$("$PYTHON_BIN" "$TOOLKIT_DIR/scripts/convert_for_ai.py" "$file" 2>&1)
         fi
+        OUTPUT="$OUTPUT$RES\n"
     fi
 done <<< "$FILES"
-echo "Action completed."
+
+if [ -n "$OUTPUT" ]; then
+    echo -e "$OUTPUT"
+else
+    echo "Action completed."
+fi
 """
 
 # Script for Universal Actions (Receives files as args)
@@ -89,12 +96,19 @@ if [ ! -x "$PYTHON_BIN" ]; then
     exit 1
 fi
 
+OUTPUT=""
 for file in "$@"; do
     if [ -n "$file" ]; then
-        "$PYTHON_BIN" "$TOOLKIT_DIR/scripts/{script_name}" "$file"
+        RES=$("$PYTHON_BIN" "$TOOLKIT_DIR/scripts/{script_name}" "$file" 2>&1)
+        OUTPUT="$OUTPUT$RES\n"
     fi
 done
-echo "Action completed."
+
+if [ -n "$OUTPUT" ]; then
+    echo -e "$OUTPUT"
+else
+    echo "Action completed."
+fi
 """
 
 def make_universal_action(name: str, uid: str) -> dict:

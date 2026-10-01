@@ -82,6 +82,11 @@ else
     warn "Docling not found in .venv. Installing (this may take a minute)..."
     "$VENV_PYTHON" -m pip install --upgrade pip --quiet
     "$VENV_PYTHON" -m pip install docling --quiet || die "Failed to install Docling."
+    
+    # Fix for macOS Python 3.10 SciPy dlopen bug
+    info "Applying macOS compatibility fix for SciPy..."
+    "$VENV_PYTHON" -m pip install scipy --force-reinstall --no-deps --quiet || true
+    
     success "Docling installed."
 fi
 
