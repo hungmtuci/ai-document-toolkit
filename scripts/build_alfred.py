@@ -33,16 +33,11 @@ export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
 
 ACTION="$1"
 TOOLKIT_DIR="{toolkit_dir}"
-PYTHON_BIN="/opt/homebrew/bin/python3"
+PYTHON_BIN="$TOOLKIT_DIR/.venv/bin/python3"
 
-if ! command -v "$PYTHON_BIN" &>/dev/null; then
-    PYTHON_BIN="/usr/local/bin/python3"
-fi
-if ! command -v "$PYTHON_BIN" &>/dev/null; then
-    PYTHON_BIN="/usr/bin/python3"
-fi
-if ! command -v "$PYTHON_BIN" &>/dev/null; then
-    PYTHON_BIN="python3"
+if [ ! -x "$PYTHON_BIN" ]; then
+    echo "Virtual environment not found! Please run install.sh."
+    exit 1
 fi
 
 FILES=$(osascript -e '
@@ -87,16 +82,11 @@ def make_ua_script(action: str, toolkit_dir: str) -> str:
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
 
 TOOLKIT_DIR="{toolkit_dir}"
-PYTHON_BIN="/opt/homebrew/bin/python3"
+PYTHON_BIN="$TOOLKIT_DIR/.venv/bin/python3"
 
-if ! command -v "$PYTHON_BIN" &>/dev/null; then
-    PYTHON_BIN="/usr/local/bin/python3"
-fi
-if ! command -v "$PYTHON_BIN" &>/dev/null; then
-    PYTHON_BIN="/usr/bin/python3"
-fi
-if ! command -v "$PYTHON_BIN" &>/dev/null; then
-    PYTHON_BIN="python3"
+if [ ! -x "$PYTHON_BIN" ]; then
+    echo "Virtual environment not found! Please run install.sh."
+    exit 1
 fi
 
 for file in "$@"; do
