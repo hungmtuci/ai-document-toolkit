@@ -27,11 +27,12 @@ UID_SCRIPT_MD  = "SCRIPT-MD-UID-0000-0000-000000"
 UID_SCRIPT_AI  = "SCRIPT-AI-UID-0000-0000-000000"
 
 # Script for List Filter (Grabs Finder Selection)
-BASH_SCRIPT_LIST = """#!/bin/bash
+def make_list_script(toolkit_dir: str) -> str:
+    return f"""#!/bin/bash
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
 
 ACTION="$1"
-TOOLKIT_DIR="$HOME/Developer/AI/ai-document-toolkit"
+TOOLKIT_DIR="{toolkit_dir}"
 PYTHON_BIN="/opt/homebrew/bin/python3"
 
 if ! command -v "$PYTHON_BIN" &>/dev/null; then
@@ -75,7 +76,7 @@ echo "Action completed."
 """
 
 # Script for Universal Actions (Receives files as args)
-def make_ua_script(action: str) -> str:
+def make_ua_script(action: str, toolkit_dir: str) -> str:
     script_name = {
         "pdf": "convert_to_pdf.py",
         "md": "convert_to_markdown.py",
@@ -85,7 +86,7 @@ def make_ua_script(action: str) -> str:
     return f"""#!/bin/bash
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
 
-TOOLKIT_DIR="$HOME/Developer/AI/ai-document-toolkit"
+TOOLKIT_DIR="{toolkit_dir}"
 PYTHON_BIN="/opt/homebrew/bin/python3"
 
 if ! command -v "$PYTHON_BIN" &>/dev/null; then
@@ -135,7 +136,7 @@ def make_script_action(script: str, uid: str) -> dict:
         "version": 2
     }
 
-def build_info_plist() -> dict:
+def build_info_plist(toolkit_dir: str) -> dict:
     list_items = [
         {"title": "Convert to PDF", "arg": "pdf", "subtitle": "Convert selected document(s) to PDF format"},
         {"title": "Convert to Markdown", "arg": "md", "subtitle": "Convert selected document(s) to Markdown format"},
@@ -160,7 +161,7 @@ def build_info_plist() -> dict:
             "version": 1
         },
         # Script for List Filter
-        make_script_action(BASH_SCRIPT_LIST, UID_SCRIPT_LIST),
+        make_script_action(make_list_script(toolkit_dir), UID_SCRIPT_LIST),
         
         # Universal Actions
         make_universal_action("Convert to PDF", UID_UA_PDF),
@@ -168,9 +169,9 @@ def build_info_plist() -> dict:
         make_universal_action("Convert for AI", UID_UA_AI),
         
         # Scripts for Universal Actions
-        make_script_action(make_ua_script("pdf"), UID_SCRIPT_PDF),
-        make_script_action(make_ua_script("md"), UID_SCRIPT_MD),
-        make_script_action(make_ua_script("ai"), UID_SCRIPT_AI),
+        make_script_action(make_ua_script("pdf", toolkit_dir), UID_SCRIPT_PDF),
+        make_script_action(make_ua_script("md", toolkit_dir), UID_SCRIPT_MD),
+        make_script_action(make_ua_script("ai", toolkit_dir), UID_SCRIPT_AI),
         
         # Output Notification
         {
@@ -220,7 +221,10 @@ def main():
     output_dir.mkdir(parents=True, exist_ok=True)
     
     workflow_path = output_dir / "AI Toolkit.alfredworkflow"
-    plist_data = build_info_plist()
+    
+    # We use the absolute path to output_dir as the toolkit_dir.
+    toolkit_dir = str(output_dir.resolve())
+    plist_data = build_info_plist(toolkit_dir)
 
     with zipfile.ZipFile(workflow_path, 'w', zipfile.ZIP_DEFLATED) as zf:
         plist_bytes = plistlib.dumps(plist_data, fmt=plistlib.FMT_XML)
