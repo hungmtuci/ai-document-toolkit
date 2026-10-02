@@ -71,23 +71,17 @@ else
     success "LibreOffice: $SOFFICE"
 fi
 
-# ── Step 3: Install Dependencies (Docling) ────────────────────────────
+# ── Step 3: Install Dependencies ────────────────────────────
 echo ""
-echo -e "${BOLD}Step 3: Checking Docling in Virtual Environment${RESET}"
+echo -e "${BOLD}Step 3: Checking AI Dependencies in Virtual Environment${RESET}"
 
-if "$VENV_PYTHON" -c "import docling" &>/dev/null; then
-    DVER=$("$VENV_PYTHON" -c "import importlib.metadata; print(importlib.metadata.version('docling'))")
-    success "Docling: $DVER"
+if "$VENV_PYTHON" -c "import markitdown, pymupdf4llm" &>/dev/null; then
+    success "Dependencies (markitdown, pymupdf4llm) are already installed."
 else
-    warn "Docling not found in .venv. Installing (this may take a minute)..."
+    warn "Dependencies missing in .venv. Installing (this may take a minute)..."
     "$VENV_PYTHON" -m pip install --upgrade pip --quiet
-    "$VENV_PYTHON" -m pip install docling --quiet || die "Failed to install Docling."
-    
-    # Fix for macOS Python 3.10 SciPy dlopen bug
-    info "Applying macOS compatibility fix for SciPy..."
-    "$VENV_PYTHON" -m pip install scipy --force-reinstall --no-deps --quiet || true
-    
-    success "Docling installed."
+    "$VENV_PYTHON" -m pip install markitdown pymupdf4llm --quiet || die "Failed to install dependencies."
+    success "Dependencies installed."
 fi
 
 # ── Step 4: Build Alfred Workflow ─────────────────────────────────────
