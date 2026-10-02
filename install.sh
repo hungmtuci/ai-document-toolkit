@@ -80,7 +80,7 @@ if "$VENV_PYTHON" -c "import markitdown, pymupdf4llm" &>/dev/null; then
 else
     warn "Dependencies missing in .venv. Installing (this may take a minute)..."
     "$VENV_PYTHON" -m pip install --upgrade pip --quiet
-    "$VENV_PYTHON" -m pip install markitdown pymupdf4llm --quiet || die "Failed to install dependencies."
+    "$VENV_PYTHON" -m pip install "markitdown[all]" pymupdf4llm --quiet || die "Failed to install dependencies."
     success "Dependencies installed."
 fi
 
