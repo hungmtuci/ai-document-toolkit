@@ -25,27 +25,50 @@ SCRIPTS_DIR="$PROJECT_DIR/scripts"
 
 # ── Step 1: Check Python 3 & Setup Virtual Env ─────────────────────────
 echo -e "${BOLD}Step 1: Setting up Python Environment${RESET}"
+
+is_py310_or_higher() {
+    "$1" -c "import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)" 2>/dev/null
+}
+
 PYTHON=""
-# Always prefer homebrew/system python over conda to avoid tricky binary bugs
-for c in /opt/homebrew/bin/python3 /usr/local/bin/python3 /usr/bin/python3 python3; do
-    if command -v "$c" &>/dev/null; then 
-        # Skip if it's explicitly miniconda unless nothing else exists
-        if [[ "$c" != *"miniconda"* ]] && [[ "$c" != *"anaconda"* ]]; then
-            PYTHON="$(command -v "$c")"
+# Search for Python >= 3.10 (required by MarkItDown)
+candidates=(
+    "$(command -v python3 2>/dev/null || true)"
+    "$(command -v python3.12 2>/dev/null || true)"
+    "$(command -v python3.11 2>/dev/null || true)"
+    "$(command -v python3.10 2>/dev/null || true)"
+    "/opt/homebrew/bin/python3"
+    "/usr/local/bin/python3"
+    "$HOME/miniconda3/bin/python3"
+    "$HOME/anaconda3/bin/python3"
+    "$HOME/miniforge3/bin/python3"
+)
+
+for c in "${candidates[@]}"; do
+    if [ -n "$c" ] && [ -x "$c" ]; then
+        if is_py310_or_higher "$c"; then
+            PYTHON="$c"
             break
         fi
     fi
 done
-# Fallback to whatever python3 is available if we couldn't find a clean one
-if [ -z "$PYTHON" ] && command -v python3 &>/dev/null; then
-    PYTHON="$(command -v python3)"
-fi
-[ -z "$PYTHON" ] && die "Python 3 not found. Please install Python 3."
+
+[ -z "$PYTHON" ] && die "Python >= 3.10 is required by MarkItDown. Please install Python 3.10+ via Homebrew or Conda."
 
 PY_VER=$("$PYTHON" --version 2>&1)
 success "Base Python: $PYTHON ($PY_VER)"
 
 VENV_DIR="$PROJECT_DIR/.venv"
+VENV_PYTHON="$VENV_DIR/bin/python3"
+
+# If .venv exists but is using Python < 3.10, auto-recreate it!
+if [ -d "$VENV_DIR" ] && [ -x "$VENV_PYTHON" ]; then
+    if ! is_py310_or_higher "$VENV_PYTHON"; then
+        warn "Existing .venv is using Python < 3.10 (incompatible with MarkItDown). Recreating .venv..."
+        rm -rf "$VENV_DIR"
+    fi
+fi
+
 if [ ! -d "$VENV_DIR" ]; then
     info "Creating virtual environment at .venv..."
     "$PYTHON" -m venv "$VENV_DIR" || die "Failed to create virtual environment."
@@ -75,7 +98,7 @@ fi
 echo ""
 echo -e "${BOLD}Step 3: Checking AI Dependencies in Virtual Environment${RESET}"
 
-if "$VENV_PYTHON" -c "import markitdown, pymupdf4llm" &>/dev/null; then
+if "$VENV_PYTHON" -c "from markitdown import MarkItDown; import pymupdf4llm" &>/dev/null; then
     success "Dependencies (markitdown, pymupdf4llm) are already installed."
 else
     warn "Dependencies missing in .venv. Installing (this may take a minute)..."
