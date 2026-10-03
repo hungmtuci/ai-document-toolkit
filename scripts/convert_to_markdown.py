@@ -100,7 +100,7 @@ def main():
     if len(sys.argv) < 2:
         print(
             f"Usage: convert_to_markdown.py <file> [file2] ...\n"
-            f"Supported: {', '.join(sorted(SUPPORTED_FORMATS))}",
+            f"Supported: {', '.join(sorted(ALL_SUPPORTED_FORMATS))}",
             file=sys.stderr,
         )
         sys.exit(1)
