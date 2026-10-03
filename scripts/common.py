@@ -1,6 +1,4 @@
-"""
-common.py — Shared utilities for AI Document Toolkit
-"""
+from __future__ import annotations
 
 import os
 import sys
@@ -9,6 +7,7 @@ import shutil
 import unicodedata
 from pathlib import Path
 from datetime import datetime
+from typing import Optional
 
 from config import SOFFICE_CANDIDATES, NOTIFY_APP, TOOLKIT_VERSION
 
@@ -30,7 +29,7 @@ def notify(title: str, message: str) -> None:
 
 # ─── LibreOffice Discovery ────────────────────────────────────────────────────
 
-def find_soffice() -> str | None:
+def find_soffice() -> Optional[str]:
     """Find the LibreOffice soffice binary. Returns path or None."""
     for candidate in SOFFICE_CANDIDATES:
         if os.path.isfile(candidate) and os.access(candidate, os.X_OK):
@@ -115,7 +114,7 @@ class ConversionLogger:
 def convert_to_pdf_via_libreoffice(
     input_path: Path,
     output_dir: Path,
-    logger: ConversionLogger | None = None,
+    logger: Optional[ConversionLogger] = None,
 ) -> Path:
     """
     Convert input_path to PDF using LibreOffice and save it in output_dir.
